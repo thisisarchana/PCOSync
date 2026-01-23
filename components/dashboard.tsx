@@ -87,7 +87,7 @@ export function Dashboard() {
   const { setCurrentScreen, userProfile } = useApp()
 
   return (
-    <div className="min-h-screen bg-[#FFF8DC] pb-28">
+    <div className="min-h-screen bg-[#FFF8DC] pb-8 ml-24">
       {/* Header */}
       <div className="relative overflow-hidden px-6 pt-12 pb-8">
         <BlobShape 
@@ -135,7 +135,7 @@ export function Dashboard() {
 
       {/* Quick Stats */}
       <div className="px-6 mb-8">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 lg:grid-cols-4 gap-4">
           <div className="bg-[#FF69B4] rounded-2xl p-4 border-[3px] border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
             <div className="w-10 h-10 rounded-xl bg-white border-2 border-black flex items-center justify-center mb-2">
               <Zap className="w-5 h-5 text-black" />
@@ -166,39 +166,39 @@ export function Dashboard() {
           <h2 className="text-2xl font-black text-black">Explore Features</h2>
           <Zigzag className="w-16 h-4" color="#FF69B4" />
         </div>
-        <div className="space-y-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((feature, index) => (
             <button
               key={feature.id}
               onClick={() => setCurrentScreen(feature.id)}
-              className="w-full rounded-3xl p-5 text-left transition-all hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0 active:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              className="rounded-3xl p-5 text-left transition-all hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0 active:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col"
               style={{ 
                 backgroundColor: feature.bgColor,
                 transform: index % 2 === 0 ? 'rotate(-0.5deg)' : 'rotate(0.5deg)'
               }}
             >
               <div className="absolute -right-4 -bottom-4 opacity-30">
-                <feature.icon className="w-24 h-24 text-black" />
+                <feature.icon className="w-20 h-20 text-black" />
               </div>
               
-              <div className="relative flex items-start gap-4">
+              <div className="relative flex flex-col gap-3">
                 <div 
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border-[3px] border-black"
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border-[3px] border-black"
                   style={{ backgroundColor: feature.color }}
                 >
-                  <feature.icon className="w-7 h-7 text-black" />
+                  <feature.icon className="w-6 h-6 text-black" />
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-black text-black mb-1">
+                  <h3 className="text-base font-black text-black mb-1">
                     {feature.title}
                   </h3>
-                  <p className="text-sm font-semibold text-black/70 leading-relaxed">
+                  <p className="text-xs font-semibold text-black/70 leading-relaxed">
                     {feature.description}
                   </p>
                 </div>
                 
-                <div className="w-8 h-8 rounded-full bg-white border-2 border-black flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-full bg-white border-2 border-black flex items-center justify-center shrink-0 self-end">
                   <ChevronRight className="w-5 h-5 text-black" />
                 </div>
               </div>

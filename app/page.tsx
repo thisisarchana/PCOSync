@@ -38,8 +38,8 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FEF9E7]">
-      <main className="max-w-md mx-auto relative">
+    <div className="min-h-screen bg-[#FEF9E7] flex">
+      <main className="flex-1 relative">
         {renderScreen()}
         <BottomNavigation />
       </main>
