@@ -1,6 +1,8 @@
 "use client"
 
 import { AppProvider, useApp } from "@/lib/app-context"
+import { LandingPage } from "@/components/landing-page"
+import { AuthPage } from "@/components/auth-page"
 import { Dashboard } from "@/components/dashboard"
 import { MedicalAnalyzer } from "@/components/medical-analyzer"
 import { RiskAssessment } from "@/components/risk-assessment"
@@ -12,10 +14,46 @@ import { Community } from "@/components/community"
 import { BottomNavigation } from "@/components/bottom-navigation"
 
 function AppContent() {
-  const { currentScreen } = useApp()
+  const { currentScreen, setCurrentScreen, setUserTrack, isAuthenticated } = useApp()
+
+  const handleGetStarted = () => {
+    setCurrentScreen("auth")
+  }
+
+  const handleLogin = () => {
+    setCurrentScreen("auth")
+  }
+
+  const handleSelectTrack = (track: "diagnosed" | "at-risk") => {
+    setUserTrack(track)
+    setCurrentScreen("auth")
+  }
+
+  const handleAuthSuccess = () => {
+    setCurrentScreen("dashboard")
+  }
+
+  const handleBackToLanding = () => {
+    setCurrentScreen("landing")
+  }
 
   const renderScreen = () => {
     switch (currentScreen) {
+      case "landing":
+        return (
+          <LandingPage 
+            onGetStarted={handleGetStarted}
+            onLogin={handleLogin}
+            onSelectTrack={handleSelectTrack}
+          />
+        )
+      case "auth":
+        return (
+          <AuthPage 
+            onBack={handleBackToLanding}
+            onSuccess={handleAuthSuccess}
+          />
+        )
       case "dashboard":
         return <Dashboard />
       case "medical-analyzer":
@@ -33,16 +71,33 @@ function AppContent() {
       case "community":
         return <Community />
       default:
-        return <Dashboard />
+        return (
+          <LandingPage 
+            onGetStarted={handleGetStarted}
+            onLogin={handleLogin}
+            onSelectTrack={handleSelectTrack}
+          />
+        )
     }
   }
 
+  // Show sidebar navigation only when authenticated and not on landing/auth screens
+  const showSidebar = isAuthenticated && currentScreen !== "landing" && currentScreen !== "auth"
+
   return (
-    <div className="min-h-screen bg-[#FEF9E7] flex">
-      <main className="flex-1 relative">
-        {renderScreen()}
-        <BottomNavigation />
-      </main>
+    <div className="min-h-screen bg-background">
+      {showSidebar ? (
+        <div className="flex min-h-screen">
+          <BottomNavigation />
+          <main className="flex-1 ml-64">
+            {renderScreen()}
+          </main>
+        </div>
+      ) : (
+        <main className="w-full">
+          {renderScreen()}
+        </main>
+      )}
     </div>
   )
 }
