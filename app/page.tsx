@@ -56,8 +56,18 @@ function AppContent() {
             onSuccess={handleAuthSuccess}
           />
         )
+<<<<<<< Updated upstream
       case "dashboard":
         return userTrack === "diagnosed" ? <DashboardManagement /> : <DashboardPrevention />
+=======
+      case "dashboard": {
+  return (
+    userTrack === "diagnosed"
+      ? <DashboardManagement />
+      : <DashboardPrevention />
+  );
+}
+>>>>>>> Stashed changes
       case "dashboard-management":
         return <DashboardManagement />
       case "dashboard-prevention":
