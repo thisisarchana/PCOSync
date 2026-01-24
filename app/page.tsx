@@ -1,7 +1,11 @@
 "use client"
 
 import { AppProvider, useApp } from "@/lib/app-context"
+import { LandingPage } from "@/components/landing-page"
+import { AuthPage } from "@/components/auth-page"
 import { Dashboard } from "@/components/dashboard"
+import { DashboardManagement } from "@/components/dashboard-management"
+import { DashboardPrevention } from "@/components/dashboard-prevention"
 import { MedicalAnalyzer } from "@/components/medical-analyzer"
 import { RiskAssessment } from "@/components/risk-assessment"
 import { DietPersonalization } from "@/components/diet-personalization"
@@ -12,12 +16,52 @@ import { Community } from "@/components/community"
 import { BottomNavigation } from "@/components/bottom-navigation"
 
 function AppContent() {
-  const { currentScreen } = useApp()
+  const { currentScreen, setCurrentScreen, setUserTrack, isAuthenticated, userTrack } = useApp()
+
+  const handleGetStarted = () => {
+    setCurrentScreen("auth")
+  }
+
+  const handleLogin = () => {
+    setCurrentScreen("auth")
+  }
+
+  const handleSelectTrack = (track: "diagnosed" | "at-risk") => {
+    setUserTrack(track)
+    setCurrentScreen("auth")
+  }
+
+  const handleAuthSuccess = () => {
+    setCurrentScreen("dashboard")
+  }
+
+  const handleBackToLanding = () => {
+    setCurrentScreen("landing")
+  }
 
   const renderScreen = () => {
     switch (currentScreen) {
+      case "landing":
+        return (
+          <LandingPage 
+            onGetStarted={handleGetStarted}
+            onLogin={handleLogin}
+            onSelectTrack={handleSelectTrack}
+          />
+        )
+      case "auth":
+        return (
+          <AuthPage 
+            onBack={handleBackToLanding}
+            onSuccess={handleAuthSuccess}
+          />
+        )
       case "dashboard":
-        return <Dashboard />
+        return userTrack === "diagnosed" ? <DashboardManagement /> : <DashboardPrevention />
+      case "dashboard-management":
+        return <DashboardManagement />
+      case "dashboard-prevention":
+        return <DashboardPrevention />
       case "medical-analyzer":
         return <MedicalAnalyzer />
       case "risk-assessment":
@@ -33,15 +77,20 @@ function AppContent() {
       case "community":
         return <Community />
       default:
-        return <Dashboard />
+        return (
+          <LandingPage 
+            onGetStarted={handleGetStarted}
+            onLogin={handleLogin}
+            onSelectTrack={handleSelectTrack}
+          />
+        )
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#FEF9E7] flex">
-      <main className="flex-1 relative">
+    <div className="min-h-screen bg-background">
+      <main className="w-full">
         {renderScreen()}
-        <BottomNavigation />
       </main>
     </div>
   )

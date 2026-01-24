@@ -3,7 +3,11 @@
 import { createContext, useContext, useState, type ReactNode } from "react"
 
 export type Screen = 
+  | "landing"
+  | "auth"
   | "dashboard"
+  | "dashboard-management"
+  | "dashboard-prevention"
   | "medical-analyzer"
   | "risk-assessment"
   | "diet"
@@ -11,6 +15,8 @@ export type Screen =
   | "mental-health"
   | "education"
   | "community"
+
+export type UserTrack = "diagnosed" | "at-risk" | null
 
 export interface UserProfile {
   name: string
@@ -38,6 +44,10 @@ export interface CommunityPost {
 interface AppContextType {
   currentScreen: Screen
   setCurrentScreen: (screen: Screen) => void
+  userTrack: UserTrack
+  setUserTrack: (track: UserTrack) => void
+  isAuthenticated: boolean
+  setIsAuthenticated: (auth: boolean) => void
   userProfile: UserProfile
   setUserProfile: (profile: UserProfile) => void
   moodEntries: MoodEntry[]
@@ -89,7 +99,9 @@ const defaultCommunityPosts: CommunityPost[] = [
 const AppContext = createContext<AppContextType | undefined>(undefined)
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [currentScreen, setCurrentScreen] = useState<Screen>("dashboard")
+  const [currentScreen, setCurrentScreen] = useState<Screen>("landing")
+  const [userTrack, setUserTrack] = useState<UserTrack>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userProfile, setUserProfile] = useState<UserProfile>(defaultUserProfile)
   const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([])
   const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(defaultCommunityPosts)
@@ -111,6 +123,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       value={{
         currentScreen,
         setCurrentScreen,
+        userTrack,
+        setUserTrack,
+        isAuthenticated,
+        setIsAuthenticated,
         userProfile,
         setUserProfile,
         moodEntries,

@@ -1,7 +1,4 @@
-"use client"
-
 import { useApp, type Screen } from "@/lib/app-context"
-import { BlobShape, FlowerShape, StarBurst, CircleDecor, Zigzag } from "./decorative-shapes"
 import { 
   FileText, 
   ClipboardCheck, 
@@ -12,8 +9,11 @@ import {
   Users,
   ChevronRight,
   Sparkles,
-  Zap
+  Zap,
+  TrendingUp,
+  Calendar
 } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface FeatureCard {
   id: Screen
@@ -30,56 +30,48 @@ const features: FeatureCard[] = [
     title: "Medical Report Analyzer",
     description: "Upload and understand your medical reports with AI-powered explanations",
     icon: FileText,
-    color: "#FF69B4",
-    bgColor: "#FFE4EC",
+    color: "bg-pcos-pink",
+    bgColor: "bg-pcos-pink/10",
   },
   {
     id: "risk-assessment",
     title: "PCOS Risk Assessment",
     description: "Take a quick assessment to understand your PCOS risk level",
     icon: ClipboardCheck,
-    color: "#00D9A0",
-    bgColor: "#D4FFF0",
+    color: "bg-pcos-mint",
+    bgColor: "bg-pcos-mint/10",
   },
   {
     id: "diet",
     title: "Diet Personalization",
     description: "Get personalized PCOS-friendly meal plans tailored for you",
     icon: Utensils,
-    color: "#FFD700",
-    bgColor: "#FFF9D4",
+    color: "bg-pcos-peach",
+    bgColor: "bg-pcos-peach/10",
   },
   {
     id: "exercise",
     title: "Exercise Guidance",
     description: "Discover workouts designed for PCOS symptom management",
     icon: Dumbbell,
-    color: "#DDA0DD",
-    bgColor: "#F8E8F8",
+    color: "bg-pcos-lavender",
+    bgColor: "bg-pcos-lavender/10",
   },
   {
     id: "mental-health",
     title: "Mental Health Support",
     description: "Track your mood and access stress-relief resources",
     icon: Heart,
-    color: "#FF7F7F",
-    bgColor: "#FFE8E8",
+    color: "bg-pcos-coral",
+    bgColor: "bg-pcos-coral/10",
   },
   {
     id: "education",
     title: "Educational Hub",
     description: "Learn about PCOS, myths vs facts, and when to seek help",
     icon: BookOpen,
-    color: "#87CEEB",
-    bgColor: "#E8F6FF",
-  },
-  {
-    id: "community",
-    title: "Community",
-    description: "Connect with others on their PCOS journey",
-    icon: Users,
-    color: "#FFAB76",
-    bgColor: "#FFF0E4",
+    color: "bg-pcos-sky",
+    bgColor: "bg-pcos-sky/10",
   },
 ]
 
@@ -87,130 +79,162 @@ export function Dashboard() {
   const { setCurrentScreen, userProfile } = useApp()
 
   return (
-    <div className="min-h-screen bg-[#FFF8DC] pb-8 ml-24">
-      {/* Header */}
-      <div className="relative overflow-hidden px-6 pt-12 pb-8">
-        <BlobShape 
-          className="absolute -top-16 -right-16 w-44 h-44" 
-          color="#FF69B4" 
-        />
-        <FlowerShape 
-          className="absolute top-12 right-4 w-14 h-14" 
-          color="#FFD700" 
-        />
-        <StarBurst 
-          className="absolute top-32 right-28 w-8 h-8" 
-          color="#00D9A0" 
-        />
-        <CircleDecor 
-          className="absolute top-24 right-20 w-4 h-4" 
-          color="#DDA0DD" 
-        />
-        
-        <div className="relative">
-          <div className="inline-flex items-center gap-2 mb-3 px-4 py-2 bg-[#FFD700] rounded-full border-[3px] border-black">
-            <Sparkles className="w-4 h-4 text-black" />
-            <span className="text-sm font-black text-black uppercase tracking-wide">Welcome to</span>
-          </div>
-          <h1 className="text-5xl font-black text-black mb-3 tracking-tight">
-            PCOSync
-          </h1>
-          <p className="text-lg font-bold text-black/70 leading-relaxed max-w-xs">
-            Your companion for PCOS care & prevention
-          </p>
-          
-          {userProfile.riskScore && (
-            <div className="mt-5 inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-white border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <div className={`w-4 h-4 rounded-full border-2 border-black ${
-                userProfile.riskScore === "low" ? "bg-[#00D9A0]" :
-                userProfile.riskScore === "medium" ? "bg-[#FFD700]" : "bg-[#FF7F7F]"
-              }`} />
-              <span className="text-base font-black text-black">
-                Risk Level: {userProfile.riskScore.charAt(0).toUpperCase() + userProfile.riskScore.slice(1)}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="px-6 mb-8">
-        <div className="grid grid-cols-3 lg:grid-cols-4 gap-4">
-          <div className="bg-[#FF69B4] rounded-2xl p-4 border-[3px] border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-            <div className="w-10 h-10 rounded-xl bg-white border-2 border-black flex items-center justify-center mb-2">
-              <Zap className="w-5 h-5 text-black" />
-            </div>
-            <p className="text-3xl font-black text-black">7</p>
-            <p className="text-xs font-bold text-black/80">Day Streak</p>
-          </div>
-          <div className="bg-[#00D9A0] rounded-2xl p-4 border-[3px] border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-            <div className="w-10 h-10 rounded-xl bg-white border-2 border-black flex items-center justify-center mb-2">
-              <Utensils className="w-5 h-5 text-black" />
-            </div>
-            <p className="text-3xl font-black text-black">12</p>
-            <p className="text-xs font-bold text-black/80">Meals Logged</p>
-          </div>
-          <div className="bg-[#FFD700] rounded-2xl p-4 border-[3px] border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-            <div className="w-10 h-10 rounded-xl bg-white border-2 border-black flex items-center justify-center mb-2">
-              <Dumbbell className="w-5 h-5 text-black" />
-            </div>
-            <p className="text-3xl font-black text-black">5</p>
-            <p className="text-xs font-bold text-black/80">Workouts</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Feature Cards */}
-      <div className="px-6">
-        <div className="flex items-center gap-3 mb-5">
-          <h2 className="text-2xl font-black text-black">Explore Features</h2>
-          <Zigzag className="w-16 h-4" color="#FF69B4" />
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          {features.map((feature, index) => (
-            <button
-              key={feature.id}
-              onClick={() => setCurrentScreen(feature.id)}
-              className="rounded-3xl p-5 text-left transition-all hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0 active:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col"
-              style={{ 
-                backgroundColor: feature.bgColor,
-                transform: index % 2 === 0 ? 'rotate(-0.5deg)' : 'rotate(0.5deg)'
-              }}
-            >
-              <div className="absolute -right-4 -bottom-4 opacity-30">
-                <feature.icon className="w-20 h-20 text-black" />
+    <div className="min-h-screen bg-background p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <div className="inline-flex items-center gap-2 mb-3 px-4 py-2 bg-pcos-lavender/30 rounded-full">
+                <Sparkles className="w-4 h-4 text-foreground" />
+                <span className="text-sm font-medium text-foreground">Welcome back</span>
               </div>
-              
-              <div className="relative flex flex-col gap-3">
-                <div 
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border-[3px] border-black"
-                  style={{ backgroundColor: feature.color }}
-                >
-                  <feature.icon className="w-6 h-6 text-black" />
+              <h1 className="text-4xl font-bold text-foreground mb-2">
+                Your PCOS Dashboard
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                Track your progress and manage your wellness journey
+              </p>
+            </div>
+            
+            {userProfile.riskScore && (
+              <div className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-card border border-border shadow-sm">
+                <div className={`w-4 h-4 rounded-full ${
+                  userProfile.riskScore === "low" ? "bg-pcos-mint" :
+                  userProfile.riskScore === "medium" ? "bg-pcos-yellow" : "bg-pcos-coral"
+                }`} />
+                <span className="font-semibold text-foreground">
+                  Risk Level: {userProfile.riskScore.charAt(0).toUpperCase() + userProfile.riskScore.slice(1)}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-4 gap-6 mb-10">
+          <Card className="border-0 shadow-sm bg-card rounded-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-pcos-pink/20 flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-pcos-pink" />
+                </div>
+                <TrendingUp className="w-5 h-5 text-pcos-mint" />
+              </div>
+              <p className="text-3xl font-bold text-foreground mb-1">7</p>
+              <p className="text-sm text-muted-foreground">Day Streak</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-0 shadow-sm bg-card rounded-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-pcos-mint/20 flex items-center justify-center">
+                  <Utensils className="w-6 h-6 text-pcos-mint" />
+                </div>
+                <TrendingUp className="w-5 h-5 text-pcos-mint" />
+              </div>
+              <p className="text-3xl font-bold text-foreground mb-1">12</p>
+              <p className="text-sm text-muted-foreground">Meals Logged</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-0 shadow-sm bg-card rounded-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-pcos-lavender/20 flex items-center justify-center">
+                  <Dumbbell className="w-6 h-6 text-pcos-lavender" />
+                </div>
+                <TrendingUp className="w-5 h-5 text-pcos-mint" />
+              </div>
+              <p className="text-3xl font-bold text-foreground mb-1">5</p>
+              <p className="text-sm text-muted-foreground">Workouts</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-0 shadow-sm bg-card rounded-2xl">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-pcos-peach/20 flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-pcos-peach" />
+                </div>
+                <span className="text-xs font-medium text-pcos-mint bg-pcos-mint/10 px-2 py-1 rounded-full">On Track</span>
+              </div>
+              <p className="text-3xl font-bold text-foreground mb-1">85%</p>
+              <p className="text-sm text-muted-foreground">Goals Met</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Feature Cards */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-foreground mb-6">Explore Features</h2>
+          <div className="grid grid-cols-3 gap-6">
+            {features.map((feature) => (
+              <button
+                key={feature.id}
+                onClick={() => setCurrentScreen(feature.id)}
+                className={`rounded-2xl p-6 text-left transition-all hover:shadow-lg hover:-translate-y-1 relative overflow-hidden border border-border bg-card group`}
+              >
+                <div className={`absolute -right-6 -bottom-6 opacity-10 group-hover:opacity-20 transition-opacity`}>
+                  <feature.icon className="w-32 h-32 text-foreground" />
                 </div>
                 
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-black text-black mb-1">
+                <div className="relative">
+                  <div 
+                    className={`w-14 h-14 rounded-xl ${feature.color} flex items-center justify-center mb-4`}
+                  >
+                    <feature.icon className="w-7 h-7 text-foreground" />
+                  </div>
+                  
+                  <h3 className="text-lg font-bold text-foreground mb-2">
                     {feature.title}
                   </h3>
-                  <p className="text-xs font-semibold text-black/70 leading-relaxed">
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                     {feature.description}
                   </p>
+                  
+                  <div className="flex items-center text-sm font-medium text-pcos-pink">
+                    Explore
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </div>
                 </div>
-                
-                <div className="w-8 h-8 rounded-full bg-white border-2 border-black flex items-center justify-center shrink-0 self-end">
-                  <ChevronRight className="w-5 h-5 text-black" />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Community Card */}
+        <Card className="border-0 shadow-sm bg-gradient-to-r from-pcos-pink/20 via-pcos-lavender/20 to-pcos-mint/20 rounded-2xl">
+          <CardContent className="p-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 rounded-2xl bg-pcos-mint flex items-center justify-center">
+                  <Users className="w-8 h-8 text-foreground" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground mb-1">
+                    Join the Community
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Connect with others on their PCOS journey, share experiences, and find support.
+                  </p>
                 </div>
               </div>
-            </button>
-          ))}
-        </div>
-      </div>
+              <button
+                onClick={() => setCurrentScreen("community")}
+                className="px-6 py-3 bg-pcos-pink hover:bg-pcos-pink/90 text-foreground font-semibold rounded-xl transition-colors flex items-center gap-2"
+              >
+                Explore Community
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Privacy Note */}
-      <div className="px-6 mt-8">
-        <div className="bg-white rounded-2xl p-4 border-[3px] border-black">
-          <p className="text-xs font-bold text-black/70 text-center leading-relaxed">
+        {/* Privacy Note */}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-muted-foreground">
             Your data is private and secure. We never share your personal health information without your explicit consent.
           </p>
         </div>
