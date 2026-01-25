@@ -6,6 +6,8 @@ export type Screen =
   | "landing"
   | "auth"
   | "dashboard"
+  | "dashboard-management"
+  | "dashboard-prevention"
   | "medical-analyzer"
   | "risk-assessment"
   | "diet"

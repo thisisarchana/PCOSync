@@ -1,3 +1,5 @@
+"use client"
+
 import { useApp, type Screen } from "@/lib/app-context"
 import { 
   FileText, 
