@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import React from "react"
+
+import { useState, useRef } from "react"
 import { useApp } from "@/lib/app-context"
 import { BlobShape, StarBurst, CircleDecor } from "./decorative-shapes"
 import { 
@@ -10,7 +12,8 @@ import {
   CheckCircle, 
   AlertTriangle,
   Info,
-  Sparkles
+  Sparkles,
+  X
 } from "lucide-react"
 
 interface AnalysisResult {
@@ -20,55 +23,159 @@ interface AnalysisResult {
   explanation: string
 }
 
+interface AnalysisFeedback {
+  overallAssessment: string
+  keyFindings: string[]
+  recommendations: string[]
+  whenToSeeDoctors: string[]
+}
+
 const mockAnalysisResults: AnalysisResult[] = [
-  {
-    parameter: "LH/FSH Ratio",
-    value: "2.8",
-    status: "elevated",
-    explanation: "Your LH to FSH ratio is slightly higher than typical. In PCOS, this ratio is often above 2:1. This doesn't mean anything is wrong, but it's something your doctor might want to monitor.",
-  },
-  {
-    parameter: "Testosterone",
-    value: "52 ng/dL",
-    status: "attention",
-    explanation: "Your testosterone level is at the upper end of normal. Slightly elevated androgens are common in PCOS and can contribute to symptoms like acne or hair changes.",
-  },
-  {
-    parameter: "Fasting Glucose",
-    value: "95 mg/dL",
-    status: "normal",
-    explanation: "Great news! Your fasting glucose is within the healthy range. Maintaining stable blood sugar through diet and exercise helps manage PCOS symptoms.",
-  },
-  {
-    parameter: "Insulin",
-    value: "12 mIU/L",
-    status: "normal",
-    explanation: "Your insulin levels look good! This suggests your body is handling insulin well, which is positive for PCOS management.",
-  },
-  {
-    parameter: "AMH",
-    value: "6.2 ng/mL",
-    status: "elevated",
-    explanation: "AMH (Anti-Mullerian Hormone) is higher than average. In PCOS, this can indicate more follicles in the ovaries, which is one of the diagnostic criteria.",
-  },
+  { parameter: "LH", value: "10.5", status: "normal", explanation: "Luteinizing hormone is within normal range." },
+  { parameter: "FSH", value: "15.2", status: "attention", explanation: "Follicle-stimulating hormone is slightly elevated." },
+  { parameter: "Testosterone", value: "0.8", status: "elevated", explanation: "Testosterone levels are elevated, which may indicate polycystic ovary syndrome." },
+  { parameter: "Blood Sugar", value: "95", status: "normal", explanation: "Blood sugar levels are within normal range." },
+  { parameter: "Insulin", value: "12", status: "attention", explanation: "Insulin levels are slightly elevated." }
 ]
+
+const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png"]
+const ALLOWED_EXTENSIONS = [".pdf", ".jpg", ".jpeg", ".png"]
 
 export function MedicalAnalyzer() {
   const { setCurrentScreen } = useApp()
   const [isUploading, setIsUploading] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [showResults, setShowResults] = useState(false)
+  const [selectedTrack, setSelectedTrack] = useState("pcos")
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [analysisResults, setAnalysisResults] = useState<AnalysisResult[]>([])
+  const [reportType, setReportType] = useState<string>("")
+  const [feedback, setFeedback] = useState<AnalysisFeedback | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleUpload = () => {
+  const validateFile = (file: File): boolean => {
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      setUploadError("File type not supported. Please upload PDF, JPG, or PNG.")
+      return false
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError("File is too large. Please upload a file under 10MB.")
+      return false
+    }
+    return true
+  }
+
+  const handleFileSelect = (file: File) => {
+    setUploadError(null)
+    if (validateFile(file)) {
+      setUploadedFile(file)
+      handleUpload(file)
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.currentTarget.files
+    if (files && files.length > 0) {
+      handleFileSelect(files[0])
+    }
+  }
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      handleFileSelect(files[0])
+    }
+  }
+
+  const handleUpload = async (file: File) => {
     setIsUploading(true)
-    setTimeout(() => {
+    try {
+      // Convert file to base64
+      const reader = new FileReader()
+      reader.onload = async () => {
+        const base64String = (reader.result as string).split(',')[1]
+        const fileType = file.type === 'application/pdf' ? 'pdf' : 'image'
+
+        setIsUploading(false)
+        setIsAnalyzing(true)
+
+        try {
+          const response = await fetch('/api/analyze-report', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              base64Data: base64String,
+              fileType: fileType,
+            }),
+          })
+
+          if (!response.ok) {
+            throw new Error('Analysis failed')
+          }
+
+          const data = await response.json()
+          console.log("[v0] Analysis result:", data)
+
+          if (data.parameters && data.parameters.length > 0) {
+            setAnalysisResults(data.parameters)
+            setReportType(data.reportType || 'Medical Report')
+            setFeedback(data.feedback || null)
+            setShowResults(true)
+          } else {
+            setUploadError('No medical parameters could be extracted from this image. Please upload a clear medical report.')
+            setIsAnalyzing(false)
+          }
+        } catch (error) {
+          console.error("[v0] API error:", error)
+          setUploadError('Failed to analyze the report. Please try again with a clearer image.')
+          setIsAnalyzing(false)
+        }
+      }
+
+      reader.onerror = () => {
+        setIsUploading(false)
+        setUploadError('Failed to read the file.')
+      }
+
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error("[v0] Error:", error)
       setIsUploading(false)
-      setIsAnalyzing(true)
-      setTimeout(() => {
-        setIsAnalyzing(false)
-        setShowResults(true)
-      }, 2000)
-    }, 1500)
+      setUploadError('An error occurred while processing your file.')
+    }
+  }
+
+  const handleClearFile = () => {
+    setUploadedFile(null)
+    setUploadError(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
   }
 
   const getStatusColor = (status: AnalysisResult["status"]) => {
@@ -115,7 +222,7 @@ export function MedicalAnalyzer() {
             Medical Report Analyzer
           </h1>
           <p className="text-base font-bold text-black/70 leading-relaxed">
-            Upload your medical reports and get AI-powered explanations in simple, friendly language
+            Upload and understand your PCOS medical reports
           </p>
         </div>
       </div>
@@ -124,10 +231,27 @@ export function MedicalAnalyzer() {
         {!showResults ? (
           <>
             {/* Upload Area */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              onChange={handleInputChange}
+              className="hidden"
+              aria-label="Upload medical report"
+            />
+            
             <button
-              onClick={handleUpload}
+              onClick={() => fileInputRef.current?.click()}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
               type="button"
-              className="w-full bg-white rounded-3xl p-8 border-[3px] border-dashed border-black hover:border-solid hover:bg-[#FFE4EC] transition-all cursor-pointer mb-6"
+              className={`w-full rounded-3xl p-8 border-[3px] border-dashed transition-all cursor-pointer mb-6 ${
+                isDragging
+                  ? "bg-[#FFE4EC] border-black border-solid"
+                  : "bg-white border-black hover:bg-[#FFE4EC]"
+              }`}
             >
               {isUploading ? (
                 <div className="text-center">
@@ -144,20 +268,55 @@ export function MedicalAnalyzer() {
                   <p className="text-xl font-black text-black">Analyzing your report...</p>
                   <p className="text-sm font-bold text-black/70 mt-2">Our AI is reading and simplifying your results</p>
                 </div>
+              ) : uploadedFile ? (
+                <div className="text-center">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#FFD700] border-[3px] border-black flex items-center justify-center">
+                    <FileText className="w-10 h-10 text-black" />
+                  </div>
+                  <p className="text-lg font-black text-black mb-2 break-words max-w-xs mx-auto">
+                    {uploadedFile.name}
+                  </p>
+                  <p className="text-xs font-bold text-black/60 mb-3">
+                    {(uploadedFile.size / 1024).toFixed(2)} KB
+                  </p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleClearFile()
+                    }}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-[#FF69B4] border-2 border-black rounded-full text-xs font-bold text-black hover:bg-[#FF5199]"
+                  >
+                    <X className="w-3 h-3" />
+                    Choose Different File
+                  </button>
+                </div>
               ) : (
                 <div className="text-center">
                   <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#FFE4EC] border-[3px] border-black flex items-center justify-center">
                     <Upload className="w-10 h-10 text-black" />
                   </div>
                   <p className="text-xl font-black text-black mb-2">
-                    Tap to upload your report
+                    Tap to upload your PCOS report
                   </p>
-                  <p className="text-sm font-bold text-black/60">
-                    Supports PDF, JPG, PNG files
+                  <p className="text-sm font-bold text-black/60 mb-3">
+                    or drag and drop your file here
+                  </p>
+                  <p className="text-xs font-bold text-black/50">
+                    Supports PDF, JPG, PNG (up to 10MB)
                   </p>
                 </div>
               )}
             </button>
+
+            {/* Error Message */}
+            {uploadError && (
+              <div className="mb-6 p-4 rounded-2xl bg-[#FFB6C1] border-[3px] border-black flex items-start gap-3">
+                <AlertTriangle className="w-6 h-6 text-black flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-black text-black text-sm">{uploadError}</p>
+                </div>
+              </div>
+            )}
 
             {/* Supported Reports */}
             <div className="bg-white rounded-3xl p-6 border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -174,59 +333,139 @@ export function MedicalAnalyzer() {
           </>
         ) : (
           <>
-            {/* Results */}
-            <div className="bg-[#D4FFF0] rounded-3xl p-6 mb-6 border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            {/* Results Header */}
+            <div className="bg-[#FFE4EC] rounded-3xl p-6 mb-6 border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-[#00D9A0] border-[3px] border-black flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl border-[3px] border-black flex items-center justify-center bg-[#FF69B4]">
                   <CheckCircle className="w-6 h-6 text-black" />
                 </div>
                 <div>
-                  <h3 className="font-black text-black text-lg">Analysis Complete</h3>
-                  <p className="text-xs font-bold text-black/70">5 parameters analyzed</p>
+                  <h3 className="font-black text-black text-lg">Analysis Complete - {reportType}</h3>
+                  <p className="text-xs font-bold text-black/70">{analysisResults.length} parameters analyzed</p>
                 </div>
               </div>
               
               <div className="p-4 rounded-xl bg-white border-2 border-black">
                 <p className="text-sm font-bold text-black leading-relaxed">
-                  Overall, your results show some patterns common in PCOS. Remember, these findings help guide lifestyle choices and conversations with your doctor - they are not a diagnosis.
+                  Your analysis shows hormonal patterns. Remember, these findings help guide lifestyle choices and conversations with your doctor.
                 </p>
               </div>
             </div>
 
-            {/* Parameter Cards */}
-            <div className="space-y-4">
-              {mockAnalysisResults.map((result) => {
-                const statusStyle = getStatusColor(result.status)
-                const StatusIcon = statusStyle.icon
-                
-                return (
-                  <div key={result.parameter} className="bg-white rounded-3xl p-5 border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h4 className="font-black text-black">{result.parameter}</h4>
-                        <p className="text-2xl font-black text-black">{result.value}</p>
+            {/* Feedback Section */}
+            {feedback && (
+              <div className="space-y-6 mb-6">
+                {/* Overall Assessment */}
+                <div className="bg-gradient-to-br from-[#FFE4EC] to-[#FFD700] rounded-3xl p-6 border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <h3 className="text-lg font-black text-black mb-3 flex items-center gap-2">
+                    <span className="text-2xl">✨</span>
+                    Overall Assessment
+                  </h3>
+                  <p className="text-base font-bold text-black leading-relaxed">
+                    {feedback.overallAssessment}
+                  </p>
+                </div>
+
+                {/* Key Findings */}
+                <div className="bg-white rounded-3xl p-6 border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <h3 className="text-lg font-black text-black mb-4 flex items-center gap-2">
+                    <span className="text-2xl">📋</span>
+                    Key Findings
+                  </h3>
+                  <div className="space-y-3">
+                    {feedback.keyFindings.map((finding, idx) => (
+                      <div key={idx} className="flex gap-3 items-start p-3 rounded-xl bg-[#D4FFF0] border-2 border-black">
+                        <span className="text-lg font-black text-black flex-shrink-0 pt-0.5">→</span>
+                        <p className="text-sm font-bold text-black leading-relaxed">{finding}</p>
                       </div>
-                      <div 
-                        className="px-3 py-1.5 rounded-full flex items-center gap-1.5 border-2 border-black"
-                        style={{ backgroundColor: statusStyle.bg }}
-                      >
-                        <StatusIcon className="w-4 h-4 text-black" />
-                        <span className="text-xs font-black text-black">
-                          {statusStyle.label}
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-sm font-semibold text-black/70 leading-relaxed">
-                      {result.explanation}
-                    </p>
+                    ))}
                   </div>
-                )
-              })}
-            </div>
+                </div>
+
+                {/* Recommendations */}
+                <div className="bg-white rounded-3xl p-6 border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <h3 className="text-lg font-black text-black mb-4 flex items-center gap-2">
+                    <span className="text-2xl">💡</span>
+                    Recommendations
+                  </h3>
+                  <div className="space-y-3">
+                    {feedback.recommendations.map((rec, idx) => (
+                      <div key={idx} className="flex gap-3 items-start p-3 rounded-xl bg-[#FFFACD] border-2 border-black">
+                        <span className="text-lg font-black text-black flex-shrink-0 pt-0.5">✓</span>
+                        <p className="text-sm font-bold text-black leading-relaxed">{rec}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* When to See Doctor */}
+                <div className="bg-white rounded-3xl p-6 border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <h3 className="text-lg font-black text-black mb-4 flex items-center gap-2">
+                    <span className="text-2xl">👨‍⚕️</span>
+                    When to See Your Doctor
+                  </h3>
+                  <div className="space-y-3">
+                    {feedback.whenToSeeDoctors.map((item, idx) => (
+                      <div key={idx} className="flex gap-3 items-start p-3 rounded-xl bg-[#FFE4EC] border-2 border-black">
+                        <span className="text-lg font-black text-black flex-shrink-0 pt-0.5">⚠️</span>
+                        <p className="text-sm font-bold text-black leading-relaxed">{item}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Parameter Cards */}
+            {analysisResults.length > 0 ? (
+              <div className="space-y-4">
+                {analysisResults.map((result, index) => {
+                  const statusStyle = getStatusColor(result.status)
+                  const StatusIcon = statusStyle.icon
+                  
+                  return (
+                    <div key={index} className="bg-white rounded-3xl p-5 border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="font-black text-black">{result.parameter}</h4>
+                          <p className="text-2xl font-black text-black">{result.value}</p>
+                        </div>
+                        <div 
+                          className="px-3 py-1.5 rounded-full flex items-center gap-1.5 border-2 border-black"
+                          style={{ backgroundColor: statusStyle.bg }}
+                        >
+                          <StatusIcon className="w-4 h-4 text-black" />
+                          <span className="text-xs font-black text-black">
+                            {statusStyle.label}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-sm font-semibold text-black/70 leading-relaxed">
+                        {result.explanation}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="bg-white rounded-3xl p-6 border-[3px] border-black text-center">
+                <AlertTriangle className="w-12 h-12 text-[#FFD700] mx-auto mb-3" />
+                <p className="font-black text-black mb-2">No Parameters Found</p>
+                <p className="text-sm font-bold text-black/70">The AI could not extract medical parameters from this report. Please ensure the image is clear and contains medical data.</p>
+              </div>
+            )}
 
             {/* Reset Button */}
             <button
-              onClick={() => setShowResults(false)}
+              onClick={() => {
+                setShowResults(false)
+                setAnalysisResults([])
+                setFeedback(null)
+                setUploadedFile(null)
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = ""
+                }
+              }}
               className="w-full mt-6 py-4 rounded-2xl bg-[#FF69B4] text-black font-black text-lg border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0 active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
             >
               Analyze Another Report
